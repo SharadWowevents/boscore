@@ -27,8 +27,6 @@ export default function Dashboard({ setView }) {
       if (response.ok) {
         const data = await response.json();
         setHistory(data);
-        // THE FIX: The auto-load logic has been completely removed from here.
-        // It will no longer hijack your screen after you save a new record.
       } else {
         localStorage.removeItem('token');
         if (setView) setView('login');
@@ -250,7 +248,10 @@ export default function Dashboard({ setView }) {
                          const val = scores[`${p.id}_${idx}`] || 0;
                          return (
                            <div className="kpi-item" key={idx}>
-                             <div><div className="kpi-label">{kpi.l}</div></div>
+                             <div>
+                               <div className="kpi-label">{kpi.l}</div>
+                               <div className="kpi-sub">{kpi.s}</div>
+                             </div>
                              {[1, 2, 3, 4, 5].map(n => (
                                <button key={n} className={`score-btn ${val === n ? 'sel' : ''}`} style={val === n ? { background: SCORE_COLORS[n] } : {}} onClick={() => setScore(p.id, idx, n)}>{n}</button>
                              ))}
@@ -266,9 +267,94 @@ export default function Dashboard({ setView }) {
         )}
 
         {currentTab === 'summary' && (
-           <div className="guide-card">
-              <div className="guide-title">Summary ready. Switch tabs to view your breakdown.</div>
-           </div>
+          <div>
+            <div className="sum-grid">
+              {PILLARS.map(p => {
+                const w = pillarWeighted(p);
+                const pPct = p.weight ? w / p.weight : 0;
+                const col = w ? getColor(pPct) : 'var(--text-soft)';
+                const filled = p.kpis.filter((_, i) => scores[`${p.id}_${i}`]).length;
+                
+                return (
+                  <div className="sum-card" key={p.id}>
+                    <div className="sum-top-stripe" style={{ background: p.color }}></div>
+                    <div className="sum-icon">{p.icon}</div>
+                    <div>
+                      <span className="sum-score" style={{ color: col }}>{w || '—'}</span>
+                      {w > 0 && <span className="sum-of"> /{p.weight}</span>}
+                    </div>
+                    <div className="sum-name">{p.name}</div>
+                    <div className="sum-out">{p.outcome}</div>
+                    <div className="sum-bar-bg">
+                      <div className="sum-bar-fill" style={{ width: `${pPct * 100}%`, background: p.color }}></div>
+                    </div>
+                    <div className="sum-foot">
+                      <span className="sum-foot-label">{filled}/5 scored</span>
+                      <span className="sum-foot-pct" style={{ color: col }}>{w ? Math.round(pPct * 100) + '%' : '—'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* PRIORITY FOCUS */}
+            {(() => {
+              const scoredPillars = PILLARS
+                .filter(p => pillarWeighted(p) > 0)
+                .map(p => ({ ...p, w: pillarWeighted(p), pct: pillarWeighted(p) / p.weight }))
+                .sort((a, b) => a.pct - b.pct)
+                .slice(0, 3);
+
+              if (scoredPillars.length >= 2) {
+                return (
+                  <div className="priority-card">
+                    <div className="priority-title">Priority Focus Areas</div>
+                    {scoredPillars.map((p, i) => {
+                      const col = getColor(p.pct);
+                      return (
+                        <div className="priority-row" key={p.id}>
+                          <div className="priority-rank">{i + 1}</div>
+                          <div className="priority-info">
+                            <div className="priority-name">{p.icon} {p.name}</div>
+                            <div className="priority-bar-bg">
+                              <div className="priority-bar-fill" style={{ width: `${p.pct * 100}%`, background: col }}></div>
+                            </div>
+                          </div>
+                          <div className="priority-pct" style={{ color: col }}>{p.w}/{p.weight}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* GUIDE CARD */}
+            <div className="guide-card">
+              <div className="guide-title">Score Guide</div>
+              {[
+                { r: '750 – 850', l: 'Excellent', d: 'Business running like a system. Building a legacy.', c: '#22C55E' },
+                { r: '600 – 749', l: 'Strong', d: 'Solid foundations. Clear gaps to close.', c: '#3B82F6' },
+                { r: '450 – 599', l: 'Average', d: 'Works but fragile. One crisis exposes the gaps.', c: '#F97316' },
+                { r: '300 – 449', l: 'Needs Work', d: 'Risk in at least 2 pillars. Fix before scaling.', c: '#EF4444' },
+                { r: '0 – 299', l: 'Critical', d: 'Stop growing. Stabilise the business first.', c: '#9B1C1C' },
+              ].map((g, i) => (
+                <div className="guide-row" key={i}>
+                  <div className="guide-dot" style={{ background: g.c }}></div>
+                  <div className="guide-range" style={{ color: g.c }}>{g.r}</div>
+                  <div>
+                    <div className="guide-label" style={{ color: g.c }}>{g.l}</div>
+                    <div className="guide-desc">{g.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="footer-note">
+              WOWOS Fast Track · Business Owner Score · wowos.in
+            </div>
+          </div>
         )}
 
         {currentTab === 'history' && (
