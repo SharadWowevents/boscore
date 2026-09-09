@@ -308,3 +308,47 @@ body {
   .kpi-head-row { grid-template-columns: 1fr repeat(5,28px); }
   .score-btn { width: 26px; height: 26px; font-size: 10px; }
 }
+
+/* App.css (Add to the bottom) */
+.history-card {
+  background: var(--navy2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.history-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #F5F0E8;
+}
+.history-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-action {
+  background: var(--navy3);
+  border: 1px solid var(--border);
+  color: #F5F0E8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-action:hover { background: var(--text-mid); }
+.btn-action.del {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+.btn-action.del:hover { background: rgba(239, 68, 68, 0.2); }
