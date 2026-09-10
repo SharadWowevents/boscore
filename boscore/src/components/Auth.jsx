@@ -53,59 +53,70 @@ function Auth({ type, setView }) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <div className="brand" style={{ textAlign: 'center', marginBottom: '10px' }}>
-          WOWOS FAST TRACK
-        </div>
-        <h2 className="auth-title">
-          {type === 'login' ? 'Welcome Back' : 'Create an Account'}
-        </h2>
+      {/* Wrapper to stack the logo and the card vertically */}
+      <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Error Message Display */}
-        {error && (
-          <div style={{ color: '#EF4444', fontSize: '13px', textAlign: 'center', marginBottom: '15px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '6px' }}>
-            {error}
+        {/* LOGO ADDED HERE (Outside the auth card) */}
+        <img 
+          src="/logo.png" 
+          alt="WOWOS Logo" 
+          style={{ height: '80px', marginBottom: '90px' }} 
+        />
+
+        <div className="auth-card">
+          <div className="brand" style={{ textAlign: 'center', marginBottom: '10px' }}>
+            WOWOS FAST TRACK
           </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          {type === 'signup' && (
+          <h2 className="auth-title">
+            {type === 'login' ? 'Welcome Back' : 'Create an Account'}
+          </h2>
+          
+          {/* Error Message Display */}
+          {error && (
+            <div style={{ color: '#EF4444', fontSize: '13px', textAlign: 'center', marginBottom: '15px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '6px' }}>
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            {type === 'signup' && (
+              <input 
+                type="text" 
+                placeholder="Full Name" 
+                className="auth-input" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required 
+              />
+            )}
             <input 
-              type="text" 
-              placeholder="Full Name" 
-              className="auth-input" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              type="email" 
+              placeholder="Email Address" 
+              className="auth-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required 
             />
-          )}
-          <input 
-            type="email" 
-            placeholder="Email Address" 
-            className="auth-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required 
-          />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            className="auth-input" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required 
-          />
-          <button type="submit" className="btn-save" style={{ width: '100%', opacity: loading ? 0.7 : 1 }} disabled={loading}>
-            {loading ? 'Processing...' : (type === 'login' ? 'Log In' : 'Sign Up')}
-          </button>
-        </form>
+            <input 
+              type="password" 
+              placeholder="Password" 
+              className="auth-input" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required 
+            />
+            <button type="submit" className="btn-save" style={{ width: '100%', opacity: loading ? 0.7 : 1 }} disabled={loading}>
+              {loading ? 'Processing...' : (type === 'login' ? 'Log In' : 'Sign Up')}
+            </button>
+          </form>
 
-        <div className="auth-switch">
-          {type === 'login' ? (
-             <p onClick={() => handleSwitchView('signup')}>Don't have an account? <span>Sign Up</span></p>
-          ) : (
-             <p onClick={() => handleSwitchView('login')}>Already have an account? <span>Log In</span></p>
-          )}
+          <div className="auth-switch">
+            {type === 'login' ? (
+               <p onClick={() => handleSwitchView('signup')}>Don't have an account? <span>Sign Up</span></p>
+            ) : (
+               <p onClick={() => handleSwitchView('login')}>Already have an account? <span>Log In</span></p>
+            )}
+          </div>
         </div>
       </div>
     </div>

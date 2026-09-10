@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { PILLARS, SCORE_COLORS, SCORE_LABELS } from './data';
 
+const defaultOpenPillars = PILLARS.reduce((acc, p) => {
+  acc[p.id] = true;
+  return acc;
+}, {});
+
 export default function Dashboard({ setView }) {
   const [scores, setScores] = useState({});
   const [history, setHistory] = useState([]);
   const [activeAnalysisId, setActiveAnalysisId] = useState(null); 
   
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState('score');
-  const [openPillars, setOpenPillars] = useState({});
+  const [openPillars, setOpenPillars] = useState(defaultOpenPillars);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [viewMode, setViewMode] = useState('input');
 
-  // Fetch all history on mount
   const fetchHistory = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -43,25 +47,21 @@ export default function Dashboard({ setView }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save (Create or Update)
-  const handleSave = async () => {
+  // AUTOMATIC SAVE/UPDATE ON "SHOW SCORE" CLICK
+  const handleShowScoreAndSave = async () => {
     setSaveStatus('Saving...');
     const token = localStorage.getItem('token');
-    
-    // Capture if this is a new record before we make the API call
     const isNewRecord = !activeAnalysisId; 
     
     try {
       let response;
       if (!isNewRecord) {
-        // UPDATE existing record
         response = await fetch(`/api/analysis/${activeAnalysisId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ scores })
         });
       } else {
-        // CREATE new record
         const currentDateTime = new Date().toLocaleString('en-IN', { 
           dateStyle: 'medium', timeStyle: 'short' 
         });
@@ -74,27 +74,24 @@ export default function Dashboard({ setView }) {
       }
 
       if (response.ok) {
-        setSaveStatus('✓ Score Saved');
-        
-        // Refresh history list in the background
-        fetchHistory(); 
-        
+        const savedData = await response.json();
         if (isNewRecord) {
-          // Clear the board and reset the active ID so it becomes a blank template again
-          startNewAnalysis(); 
+          setActiveAnalysisId(savedData._id); 
         }
-
+        fetchHistory(); 
+        setSaveStatus(null);
+        setViewMode('results'); 
+        
+        // Auto-scroll to the top of the page smoothly
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
       } else {
         setSaveStatus('Error Saving');
       }
     } catch (error) {
       setSaveStatus('Error Saving');
     }
-
-    setTimeout(() => setSaveStatus(null), 2000);
   };
 
-  // Delete Record
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
     const token = localStorage.getItem('token');
@@ -105,9 +102,7 @@ export default function Dashboard({ setView }) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
-        if (activeAnalysisId === id) {
-          startNewAnalysis(); 
-        }
+        if (activeAnalysisId === id) startNewAnalysis(); 
         fetchHistory(); 
       }
     } catch (error) {
@@ -115,18 +110,20 @@ export default function Dashboard({ setView }) {
     }
   };
 
-  // Load a historical record into the editor
   const loadAnalysis = (record) => {
     setScores(record.scores || {});
     setActiveAnalysisId(record._id);
-    setCurrentTab('score');
+    setViewMode('results'); 
+    
+    // Auto-scroll to the top of the page smoothly
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
   };
 
-  // Start fresh
   const startNewAnalysis = () => {
     setScores({});
     setActiveAnalysisId(null);
-    setCurrentTab('score');
+    setViewMode('input');
+    setOpenPillars(defaultOpenPillars); 
   };
 
   const handleReset = () => {
@@ -148,14 +145,13 @@ export default function Dashboard({ setView }) {
       else newScores[key] = val;
       return newScores;
     });
-    setOpenPillars(prev => ({ ...prev, [pid]: true }));
   };
 
   const togglePillar = (id) => {
     setOpenPillars(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Calculations
+  // --- SCORE CALCULATIONS ---
   const pillarTotal = (p) => p.kpis.reduce((s, _, i) => s + (scores[`${p.id}_${i}`] || 0), 0);
   const pillarMax = (p) => p.kpis.length * 5;
   const pillarWeighted = (p) => {
@@ -165,6 +161,7 @@ export default function Dashboard({ setView }) {
   };
   const grandTotal = () => PILLARS.reduce((s, p) => s + pillarWeighted(p), 0);
   const scoredCount = () => Object.keys(scores).length;
+  
   const getColor = (pct) => {
     if (pct >= .8) return '#22C55E';
     if (pct >= .6) return '#3B82F6';
@@ -172,13 +169,24 @@ export default function Dashboard({ setView }) {
     if (pct > 0) return '#EF4444';
     return 'var(--text-soft)';
   };
+  
   const getRating = (t) => {
-    if (t >= 750) return { label: 'Excellent', color: '#22C55E', desc: 'Business running like a system.' };
-    if (t >= 600) return { label: 'Strong', color: '#3B82F6', desc: 'Solid foundations. Keep building.' };
-    if (t >= 450) return { label: 'Average', color: '#F97316', desc: 'Works but fragile.' };
-    if (t >= 300) return { label: 'Needs Work', color: '#EF4444', desc: 'Visible risk. Fix before scaling.' };
+    if (t >= 750) return { label: 'Excellent', color: '#22C55E', desc: 'Business running like a system. Building a legacy.' };
+    if (t >= 600) return { label: 'Strong', color: '#3B82F6', desc: 'Solid foundations. Clear gaps to close.' };
+    if (t >= 450) return { label: 'Average', color: '#F97316', desc: 'Works but fragile. Fix gaps.' };
+    if (t >= 300) return { label: 'Needs Work', color: '#EF4444', desc: 'Visible risk in at least 2 pillars.' };
     if (t > 0) return { label: 'Critical', color: '#9B1C1C', desc: 'Stop growing. Stabilise first.' };
     return { label: 'Start Scoring', color: 'var(--text-soft)', desc: 'Score each pillar to see your Business Owner Score' };
+  };
+
+  const calculateRecordTotal = (recordScores) => {
+    if (!recordScores) return 0;
+    return PILLARS.reduce((sum, p) => {
+      const raw = p.kpis.reduce((s, _, i) => s + (recordScores[`${p.id}_${i}`] || 0), 0);
+      const max = p.kpis.length * 5;
+      const weighted = max ? Math.round((raw / max) * p.weight) : 0;
+      return sum + weighted;
+    }, 0);
   };
 
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-soft)' }}>Loading Dashboard...</div>;
@@ -190,41 +198,62 @@ export default function Dashboard({ setView }) {
   const dashOffset = circ * (1 - (t ? pct : 0));
 
   const activeRecord = history.find(h => h._id === activeAnalysisId);
-  const activeName = activeRecord ? activeRecord.name : "Unsaved New Analysis";
+  const activeName = activeRecord ? activeRecord.name : "";
+
+  const btnStyle = { background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-soft)', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', transition: 'all 0.2s' };
 
   return (
     <>
       <div className="header">
-        <div className="brand">WOWOS FAST TRACK</div>
+        {/* CLICKABLE LOGO + BRAND CONTAINER */}
+        <div 
+          onClick={startNewAnalysis} 
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          title="Click to reset and start a new analysis"
+        >
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            style={{ height: '22px', objectFit: 'contain' }} 
+          />
+          <div className="brand">WOWOS FAST TRACK</div>
+        </div>
+
         <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>{activeName}</span>
-          <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-soft)', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '10px' }}>Logout</button>
+          <span style={{ fontSize: '12px' }}>{activeName}</span>
+          <button onClick={() => setViewMode('history')} style={btnStyle}>History</button>
+          <button onClick={handleLogout} style={btnStyle}>Logout</button>
         </div>
       </div>
 
-      <div className="hero">
-        <div className="dial-wrap">
-          <svg width="200" height="200" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="82" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="12" />
-            <circle cx="100" cy="100" r="82" fill="none" stroke={t ? r.color : "var(--gold)"} strokeWidth="12" strokeDasharray={circ} strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 100 100)" style={{ transition: 'stroke-dashoffset .6s ease, stroke .4s' }} />
-          </svg>
-          <div className="dial-center">
-            <div className="dial-num" style={{ color: t ? r.color : 'var(--text-soft)' }}>{t || '—'}</div>
-            <div className="dial-max">out of 850</div>
+      {viewMode === 'results' && (
+        <div className="hero">
+          <div className="dial-wrap">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="82" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="12" />
+              <circle cx="100" cy="100" r="82" fill="none" stroke={t ? r.color : "var(--gold)"} strokeWidth="12" strokeDasharray={circ} strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 100 100)" style={{ transition: 'stroke-dashoffset .6s ease, stroke .4s' }} />
+            </svg>
+            <div className="dial-center">
+              <div className="dial-num" style={{ color: t ? r.color : 'var(--text-soft)' }}>{t || '—'}</div>
+              <div className="dial-max">out of 850</div>
+            </div>
           </div>
+          <div className="dial-rating" style={{ color: r.color }}>{r.label}</div>
+          <div className="dial-desc">{r.desc}</div>
         </div>
-        <div className="dial-rating" style={{ color: r.color }}>{r.label}</div>
-      </div>
+      )}
 
-      <div className="tabs">
-        <button className={`tab ${currentTab === 'score' ? 'active' : ''}`} onClick={() => setCurrentTab('score')}>Score Pillars</button>
-        <button className={`tab ${currentTab === 'summary' ? 'active' : ''}`} onClick={() => setCurrentTab('summary')}>Summary View</button>
-        <button className={`tab ${currentTab === 'history' ? 'active' : ''}`} onClick={() => setCurrentTab('history')}>History</button>
-      </div>
-
-      <div className="content">
-        {currentTab === 'score' && (
+      <div className="content" style={{ paddingTop: '30px' }}>
+        
+        {viewMode === 'input' && (
            <div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ flex: 1, height: '3px', background: 'rgba(255,255,255,.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'var(--gold)', borderRadius: '2px', width: `${(scoredCount() / 25) * 100}%`, transition: 'width .3s' }}></div>
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--text-soft)', flexShrink: 0 }}>{scoredCount()}/25 scored</span>
+             </div>
+
              {PILLARS.map(p => {
                const w = pillarWeighted(p);
                const col = w ? getColor(w / p.weight) : 'var(--text-soft)';
@@ -266,7 +295,7 @@ export default function Dashboard({ setView }) {
            </div>
         )}
 
-        {currentTab === 'summary' && (
+        {viewMode === 'results' && (
           <div>
             <div className="sum-grid">
               {PILLARS.map(p => {
@@ -297,7 +326,6 @@ export default function Dashboard({ setView }) {
               })}
             </div>
 
-            {/* PRIORITY FOCUS */}
             {(() => {
               const scoredPillars = PILLARS
                 .filter(p => pillarWeighted(p) > 0)
@@ -330,7 +358,6 @@ export default function Dashboard({ setView }) {
               return null;
             })()}
 
-            {/* GUIDE CARD */}
             <div className="guide-card">
               <div className="guide-title">Score Guide</div>
               {[
@@ -350,45 +377,84 @@ export default function Dashboard({ setView }) {
                 </div>
               ))}
             </div>
-
-            <div className="footer-note">
-              WOWOS Fast Track · Business Owner Score · wowos.in
-            </div>
           </div>
         )}
 
-        {currentTab === 'history' && (
+        {viewMode === 'history' && (
           <div>
+            <h3 style={{ color: '#F5F0E8', marginBottom: '20px', fontSize: '18px' }}>Your Saved Records</h3>
             {history.length === 0 ? (
               <p style={{ textAlign: 'center', color: 'var(--text-soft)', marginTop: '20px' }}>No saved analysis yet.</p>
             ) : (
-              history.map(record => (
-                <div className="history-card" key={record._id} style={activeAnalysisId === record._id ? { border: '1px solid var(--gold)' } : {}}>
-                  <div className="history-info">
-                    <span className="history-name">{record.name}</span>
-                    {activeAnalysisId === record._id && <span style={{ fontSize: '10px', color: 'var(--gold)' }}>Currently Editing</span>}
+              history.map(record => {
+                const recordTotal = calculateRecordTotal(record.scores);
+                const recordColor = getRating(recordTotal).color;
+                
+                return (
+                  <div className="history-card" key={record._id} style={activeAnalysisId === record._id ? { border: '1px solid var(--gold)' } : {}}>
+                    <div className="history-info">
+                      <span className="history-name">{record.name}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: recordColor, marginTop: '2px' }}>
+                        Score: {recordTotal} <span style={{ color: 'var(--text-soft)', fontWeight: 'normal', fontSize: '11px' }}>/ 850</span>
+                      </span>
+                      {activeAnalysisId === record._id && <span style={{ fontSize: '10px', color: 'var(--gold)', marginTop: '4px' }}>Currently Loaded</span>}
+                    </div>
+                    <div className="history-actions">
+                      <button className="btn-action" onClick={() => loadAnalysis(record)}>View</button>
+                      <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button>
+                    </div>
                   </div>
-                  <div className="history-actions">
-                    <button className="btn-action" onClick={() => loadAnalysis(record)}>Load</button>
-                    <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
       </div>
 
       <div className="bottom-bar">
-        <button className="btn-reset" onClick={handleReset}>Clear Screen</button>
-        <button 
-          className={`btn-save ${saveStatus === '✓ Score Saved' ? 'saved' : ''}`} 
-          onClick={handleSave} 
-          style={saveStatus === '✓ Score Saved' ? { background: '#22C55E' } : {}}
-          disabled={saveStatus === 'Saving...'}
-        >
-          {saveStatus || (activeAnalysisId ? 'Update Score' : 'Save Score')}
-        </button>
+        {viewMode === 'input' && (
+           <>
+             <button className="btn-reset" onClick={handleReset}>Clear Screen</button>
+             <button 
+               className="btn-save" 
+               onClick={handleShowScoreAndSave}
+               disabled={saveStatus === 'Saving...'}
+             >
+               {saveStatus || 'Show Score'}
+             </button>
+           </>
+        )}
+
+        {/* RESULTS VIEW BUTTONS */}
+        {viewMode === 'results' && (
+           <>
+             <button 
+               className="btn-save" 
+               style={{ color:' #fff', border: '1px solid var(--border)', flex: 1 }} 
+               onClick={startNewAnalysis}
+             >
+               New Score Calculation
+             </button>
+             <button 
+               className="btn-reset" 
+               style={{ border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', flex: 1 }} 
+               onClick={() => activeAnalysisId && handleDelete(activeAnalysisId)}
+             >
+               Delete
+             </button>
+           </>
+        )}
+
+        {/* HISTORY VIEW BUTTONS */}
+        {viewMode === 'history' && (
+           <button 
+             className="btn-save" 
+             style={{ width: '100%', color: '#F5F0E8', border: '1px solid var(--border)' }} 
+             onClick={startNewAnalysis}
+           >
+             New Score Calculation
+           </button>
+        )}
       </div>
     </>
   );
