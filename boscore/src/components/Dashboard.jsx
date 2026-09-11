@@ -14,7 +14,7 @@ export default function Dashboard({ setView }) {
   const [isLoading, setIsLoading] = useState(true);
   const [openPillars, setOpenPillars] = useState(defaultOpenPillars);
   const [saveStatus, setSaveStatus] = useState(null);
-  const [viewMode, setViewMode] = useState('input');
+  const [viewMode, setViewMode] = useState('history');
 
   const fetchHistory = async () => {
     const token = localStorage.getItem('token');
@@ -200,16 +200,41 @@ export default function Dashboard({ setView }) {
   const activeRecord = history.find(h => h._id === activeAnalysisId);
   const activeName = activeRecord ? activeRecord.name : "";
 
-  const btnStyle = { background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-soft)', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', transition: 'all 0.2s' };
+  // NEW: Updated Header Button Styles for greater visibility
+  const navBtnStyle = { 
+    background: 'rgba(255, 255, 255, 0.1)', 
+    border: '1px solid rgba(255, 255, 255, 0.2)', 
+    color: '#FFFFFF', 
+    padding: '6px 14px', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontSize: '13px', 
+    fontWeight: '500',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s' 
+  };
+
+  const primaryNavBtnStyle = { 
+    background: 'var(--gold)', 
+    border: 'none', 
+    color: '#000000', 
+    padding: '6px 14px', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontSize: '13px', 
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s' 
+  };
 
   return (
     <>
       <div className="header">
         {/* CLICKABLE LOGO + BRAND CONTAINER */}
         <div 
-          onClick={startNewAnalysis} 
+          onClick={() => setViewMode('history')} 
           style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-          title="Click to reset and start a new analysis"
+          title="Go to Dashboard/History"
         >
           <img 
             src="/logo.png" 
@@ -220,9 +245,12 @@ export default function Dashboard({ setView }) {
         </div>
 
         <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span style={{ fontSize: '12px' }}>{activeName}</span>
-          <button onClick={() => setViewMode('history')} style={btnStyle}>History</button>
-          <button onClick={handleLogout} style={btnStyle}>Logout</button>
+          {viewMode !== 'history' && <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{activeName}</span>}
+          
+          {/* HIGH-VISIBILITY TOP ACTIONS */}
+          <button onClick={startNewAnalysis} style={primaryNavBtnStyle}>Get Score</button>
+          <button onClick={() => setViewMode('history')} style={navBtnStyle}>Home</button>
+          <button onClick={handleLogout} style={navBtnStyle}>Logout</button>
         </div>
       </div>
 
@@ -401,7 +429,7 @@ export default function Dashboard({ setView }) {
                     </div>
                     <div className="history-actions">
                       <button className="btn-action" onClick={() => loadAnalysis(record)}>View</button>
-                      <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button>
+                      {/* <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button> */}
                     </div>
                   </div>
                 );
@@ -411,51 +439,34 @@ export default function Dashboard({ setView }) {
         )}
       </div>
 
-      <div className="bottom-bar">
-        {viewMode === 'input' && (
-           <>
-             <button className="btn-reset" onClick={handleReset}>Clear Screen</button>
-             <button 
-               className="btn-save" 
-               onClick={handleShowScoreAndSave}
-               disabled={saveStatus === 'Saving...'}
-             >
-               {saveStatus || 'Show Score'}
-             </button>
-           </>
-        )}
+      {/* ONLY RENDER BOTTOM BAR IF WE ARE NOT IN HISTORY MODE */}
+      {viewMode !== 'history' && (
+        <div className="bottom-bar">
+          {viewMode === 'input' && (
+             <>
+               <button className="btn-reset" onClick={handleReset}>Clear Screen</button>
+               <button 
+                 className="btn-save" 
+                 onClick={handleShowScoreAndSave}
+                 disabled={saveStatus === 'Saving...'}
+               >
+                 {saveStatus || 'Show Score'}
+               </button>
+             </>
+          )}
 
-        {/* RESULTS VIEW BUTTONS */}
-        {viewMode === 'results' && (
-           <>
-             <button 
-               className="btn-save" 
-               style={{ color:' #fff', border: '1px solid var(--border)', flex: 1 }} 
-               onClick={startNewAnalysis}
-             >
-               New Score Calculation
-             </button>
+          {/* RESULTS VIEW JUST SHOWS DELETE */}
+          {/* {viewMode === 'results' && (
              <button 
                className="btn-reset" 
-               style={{ border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', flex: 1 }} 
+               style={{ border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', width: '100%' }} 
                onClick={() => activeAnalysisId && handleDelete(activeAnalysisId)}
              >
-               Delete
+               Delete Record
              </button>
-           </>
-        )}
-
-        {/* HISTORY VIEW BUTTONS */}
-        {viewMode === 'history' && (
-           <button 
-             className="btn-save" 
-             style={{ width: '100%', color: '#F5F0E8', border: '1px solid var(--border)' }} 
-             onClick={startNewAnalysis}
-           >
-             New Score Calculation
-           </button>
-        )}
-      </div>
+          )} */}
+        </div>
+      )}
     </>
   );
 }
