@@ -60,7 +60,7 @@ function Auth({ type, setView }) {
         <img 
           src="/logo.png" 
           alt="WOWOS Logo" 
-          style={{ height: '80px', marginBottom: '90px' }} 
+          style={{ height: '80px', marginBottom: '50px' }} 
         />
 
         <div className="auth-card">
