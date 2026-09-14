@@ -5,6 +5,7 @@ function Auth({ type, setView }) {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
+  const [communicationsConsent, setCommunicationsConsent] = useState(false);
 
   // New state for handling loading and errors
   const [error, setError] = useState('');
@@ -15,11 +16,22 @@ function Auth({ type, setView }) {
     setError('');
     setLoading(true);
 
-    const endpoint = type === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const payload = type === 'login' ? { email, password } : { name, email, password, mobile };
+    const endpoint = type === 'login'
+      ? '/api/auth/login'
+      : '/api/auth/signup';
+
+    const payload = type === 'login'
+      ? { email, password }
+      : {
+          name,
+          email,
+          password,
+          mobile,
+          communicationsConsent,
+        };
 
     try {
-      const response = await fetch(`${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,12 +45,12 @@ function Auth({ type, setView }) {
         throw new Error(data.msg || 'Authentication failed');
       }
 
-      // Save the JWT token to localStorage for authenticated requests later
+      // Save the JWT token to localStorage
       localStorage.setItem('token', data.token);
-      
+
       // Navigate to the dashboard
       setView('dashboard');
-      
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -54,77 +66,157 @@ function Auth({ type, setView }) {
 
   return (
     <div className="auth-container">
-      {/* Wrapper to stack the logo and the card vertically */}
-      <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        
-        {/* LOGO ADDED HERE (Outside the auth card) */}
-        <img 
-          src="/logo.png" 
-          alt="WOWOS Logo" 
-          style={{ height: '80px', marginBottom: '50px' }} 
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
+
+        {/* LOGO */}
+        <img
+          src="/logo.png"
+          alt="WOWOS Logo"
+          style={{ height: '80px', marginBottom: '50px' }}
         />
 
         <div className="auth-card">
-          <div className="brand" style={{ textAlign: 'center', marginBottom: '10px' }}>
+          <div
+            className="brand"
+            style={{ textAlign: 'center', marginBottom: '10px' }}
+          >
             WOWOS FAST TRACK
           </div>
+
           <h2 className="auth-title">
             {type === 'login' ? 'Welcome Back' : 'Create an Account'}
           </h2>
-          
-          {/* Error Message Display */}
+
+          {/* Error Message */}
           {error && (
-            <div style={{ color: '#EF4444', fontSize: '13px', textAlign: 'center', marginBottom: '15px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '6px' }}>
+            <div
+              style={{
+                color: '#EF4444',
+                fontSize: '13px',
+                textAlign: 'center',
+                marginBottom: '15px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                padding: '8px',
+                borderRadius: '6px'
+              }}
+            >
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit}>
+
             {type === 'signup' && (
               <>
-              <input 
-                type="text" 
-                placeholder="Full Name" 
-                className="auth-input" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required 
-              />
-              <input 
-              type="tel" 
-              placeholder="Mobile Number" 
-              className="auth-input"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              required 
-            /></>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className="auth-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+
+                <input
+                  type="tel"
+                  placeholder="Mobile Number"
+                  className="auth-input"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  required
+                />
+              </>
             )}
-            <input 
-              type="email" 
-              placeholder="Email Address" 
+
+            <input
+              type="email"
+              placeholder="Email Address"
               className="auth-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
             />
-            <input 
-              type="password" 
-              placeholder="Password" 
-              className="auth-input" 
+
+            <input
+              type="password"
+              placeholder="Password"
+              className="auth-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
             />
-            <button type="submit" className="btn-save" style={{ width: '100%', opacity: loading ? 0.7 : 1 }} disabled={loading}>
-              {loading ? 'Processing...' : (type === 'login' ? 'Log In' : 'Sign Up')}
+
+            {/* Communication Consent Checkbox */}
+            {type === 'signup' && (
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  margin: '15px 0',
+                  fontSize: '13px',
+                  lineHeight: '1.5',
+                  color: '#666',
+                  cursor: 'pointer'
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={communicationsConsent}
+                  onChange={(e) =>
+                    setCommunicationsConsent(e.target.checked)
+                  }
+                  required
+                  style={{
+                    marginTop: '3px',
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                />
+
+                <span>
+                  I agree to receive communications regarding this resource
+                  and occasional updates.
+                </span>
+              </label>
+            )}
+
+            <button
+              type="submit"
+              className="btn-save"
+              style={{
+                width: '100%',
+                opacity: loading ? 0.7 : 1
+              }}
+              disabled={loading}
+            >
+              {loading
+                ? 'Processing...'
+                : type === 'login'
+                  ? 'Log In'
+                  : 'Sign Up'}
             </button>
           </form>
 
           <div className="auth-switch">
             {type === 'login' ? (
-               <p onClick={() => handleSwitchView('signup')}>Don't have an account? <span>Sign Up</span></p>
+              <p onClick={() => handleSwitchView('signup')}>
+                Don't have an account? <span>Sign Up</span>
+              </p>
             ) : (
-               <p onClick={() => handleSwitchView('login')}>Already have an account? <span>Log In</span></p>
+              <p onClick={() => handleSwitchView('login')}>
+                Already have an account? <span>Log In</span>
+              </p>
             )}
           </div>
         </div>
