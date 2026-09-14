@@ -16,7 +16,7 @@ function Auth({ type, setView }) {
     setLoading(true);
 
     const endpoint = type === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const payload = type === 'login' ? { email, password } : { name, email, password, mobile: phone };
+    const payload = type === 'login' ? { email, password } : { name, email, password, mobile };
 
     try {
       const response = await fetch(`${endpoint}`, {
