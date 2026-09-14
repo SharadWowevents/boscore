@@ -97,7 +97,7 @@ function Auth({ type, setView }) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required 
-            />\</>
+            /></>
             )}
             <input 
               type="email" 
