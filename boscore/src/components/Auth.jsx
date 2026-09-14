@@ -81,6 +81,7 @@ function Auth({ type, setView }) {
           
           <form onSubmit={handleSubmit}>
             {type === 'signup' && (
+              <>
               <input 
                 type="text" 
                 placeholder="Full Name" 
@@ -89,6 +90,14 @@ function Auth({ type, setView }) {
                 onChange={(e) => setName(e.target.value)}
                 required 
               />
+              <input 
+              type="phone" 
+              placeholder="Phone Number" 
+              className="auth-input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required 
+            />\</>
             )}
             <input 
               type="email" 
@@ -96,14 +105,6 @@ function Auth({ type, setView }) {
               className="auth-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
-            />
-            <input 
-              type="phone" 
-              placeholder="Phone Number" 
-              className="auth-input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
               required 
             />
             <input 
