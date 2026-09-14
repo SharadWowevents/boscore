@@ -16,7 +16,7 @@ function Auth({ type, setView }) {
     setLoading(true);
 
     const endpoint = type === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const payload = type === 'login' ? { email, password } : { name, email, password, phone };
+    const payload = type === 'login' ? { email, password } : { name, email, password, mobile: phone };
 
     try {
       const response = await fetch(`${endpoint}`, {
@@ -91,11 +91,11 @@ function Auth({ type, setView }) {
                 required 
               />
               <input 
-              type="phone" 
-              placeholder="Phone Number" 
+              type="tel" 
+              placeholder="Mobile Number" 
               className="auth-input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
               required 
             /></>
             )}
