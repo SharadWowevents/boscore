@@ -4,7 +4,8 @@ function Auth({ type, setView }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  
+  const [phone, setPhone] = useState('');
+
   // New state for handling loading and errors
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,7 @@ function Auth({ type, setView }) {
     setLoading(true);
 
     const endpoint = type === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const payload = type === 'login' ? { email, password } : { name, email, password };
+    const payload = type === 'login' ? { email, password } : { name, email, password, phone };
 
     try {
       const response = await fetch(`${endpoint}`, {
@@ -95,6 +96,14 @@ function Auth({ type, setView }) {
               className="auth-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
+            <input 
+              type="phone" 
+              placeholder="Phone Number" 
+              className="auth-input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required 
             />
             <input 
