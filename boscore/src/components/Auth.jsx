@@ -4,7 +4,7 @@ function Auth({ type, setView }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [mobile, setMobile] = useState('');
 
   // New state for handling loading and errors
   const [error, setError] = useState('');
@@ -94,7 +94,7 @@ function Auth({ type, setView }) {
               type="tel" 
               placeholder="Mobile Number" 
               className="auth-input"
-              value={phone}
+              value={mobile}
               onChange={(e) => setMobile(e.target.value)}
               required 
             /></>
