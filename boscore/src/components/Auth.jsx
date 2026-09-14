@@ -94,7 +94,7 @@ function Auth({ type, setView }) {
               type="tel" 
               placeholder="Mobile Number" 
               className="auth-input"
-              value={mobile}
+              value={phone}
               onChange={(e) => setMobile(e.target.value)}
               required 
             /></>
