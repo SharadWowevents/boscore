@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
-const AnalysisSchema = new mongoose.Schema({
+const ScoreSchema = new mongoose.Schema({
   userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+    type: String, // Changed to String to hold the SSO ID
     required: true
   },
   name: { 
@@ -17,4 +16,4 @@ const AnalysisSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Analysis', AnalysisSchema);
+module.exports = mongoose.model('Score', ScoreSchema);

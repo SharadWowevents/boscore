@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const AnalysisSchema = new mongoose.Schema({
   userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+    type: String, // Changed to String to hold the SSO ID
     required: true
   },
   name: { 

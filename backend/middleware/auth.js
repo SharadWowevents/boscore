@@ -8,8 +8,12 @@ module.exports = function(req, res, next) {
   }
 
   try {
+    // Verifies using the shared JWT_SECRET from your central auth server
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.user;
+    
+    // Maps the central SSO ID to req.user so your routes don't break
+    // Supports whether your SSO signs the payload as { id: ... } or { userId: ... }
+    req.user = { id: decoded.id || decoded.userId }; 
     next();
   } catch (err) {
     res.status(401).json({ msg: 'Token is not valid' });
