@@ -7,7 +7,7 @@ function Auth({ type, setView }) {
   const [mobile, setMobile] = useState('');
   const [communicationsConsent, setCommunicationsConsent] = useState(false);
 
-  // New state for handling loading and errors
+  // State for handling loading and errors
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,9 +16,10 @@ function Auth({ type, setView }) {
     setError('');
     setLoading(true);
 
+    // FIXED: Changed endpoint to match backend route '/api/auth/register'
     const endpoint = type === 'login'
       ? '/api/auth/login'
-      : '/api/auth/signup';
+      : '/api/auth/register';
 
     const payload = type === 'login'
       ? { email, password }
@@ -45,8 +46,12 @@ function Auth({ type, setView }) {
         throw new Error(data.msg || 'Authentication failed');
       }
 
-      // Save the JWT token to localStorage
+      // SESSION CREATION & PERSISTENCE:
+      // Save both the JWT token and the user object to localStorage so the session holds
       localStorage.setItem('token', data.token);
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
 
       // Navigate to the dashboard
       setView('dashboard');
@@ -188,6 +193,7 @@ function Auth({ type, setView }) {
                   I agree to receive communications regarding this resource
                   and occasional updates.
                 </span>
+
               </label>
             )}
 
