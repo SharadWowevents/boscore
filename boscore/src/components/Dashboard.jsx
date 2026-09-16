@@ -47,7 +47,6 @@ export default function Dashboard({ setView }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // AUTOMATIC SAVE/UPDATE ON "SHOW SCORE" CLICK
   const handleShowScoreAndSave = async () => {
     setSaveStatus('Saving...');
     const token = localStorage.getItem('token');
@@ -240,14 +239,12 @@ export default function Dashboard({ setView }) {
         </div>
 
         <div className="header-right" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-          {/* THE FIX: width: 100% forces the text to take a full line, pushing the buttons below it */}
           {viewMode !== 'home' && (
             <div style={{ width: '100%' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{activeName}</span>
             </div>
           )}
 
-          {/* ALL THREE BUTTONS GROUPED ON THE SECOND LINE */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button onClick={startNewAnalysis} style={primaryNavBtnStyle}>Get Score</button>
             <button onClick={() => setViewMode('home')} style={navBtnStyle}>Home</button>
@@ -306,17 +303,24 @@ export default function Dashboard({ setView }) {
                        {p.kpis.map((kpi, idx) => {
                          const val = scores[`${p.id}_${idx}`] || 0;
                          return (
-                           <div className="kpi-item" key={idx} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '12px' }}>
+                           <div className="kpi-item" key={idx} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '16px', alignItems: 'center' }}>
                              <div style={{ flex: '1 1 200px' }}>
                                <div className="kpi-label">{kpi.l}</div>
                                <div className="kpi-sub">{kpi.s}</div>
                              </div>
-                             <div style={{ display: 'flex', gap: '8px' }}>
+                             
+                             {/* THE FIX: Button container flex expands, and buttons fill the space evenly */}
+                             <div style={{ display: 'flex', gap: '10px', flex: '1 1 280px' }}>
                                {[1, 2, 3, 4, 5].map(n => (
                                  <button 
                                    key={n} 
                                    className={`score-btn ${val === n ? 'sel' : ''}`} 
-                                   style={val === n ? { background: SCORE_COLORS[n] } : {}} 
+                                   style={{
+                                     ...(val === n ? { background: SCORE_COLORS[n], borderColor: SCORE_COLORS[n], color: '#fff' } : {}),
+                                     flex: 1, /* Makes buttons evenly stretch to fill gap */
+                                     padding: '12px 0', /* Better touch target for mobile */
+                                     textAlign: 'center'
+                                   }} 
                                    onClick={() => setScore(p.id, idx, n)}
                                  >
                                    {n}
@@ -440,7 +444,7 @@ export default function Dashboard({ setView }) {
                     </div>
                     <div className="history-actions">
                       <button className="btn-action" onClick={() => loadAnalysis(record)}>View</button>
-                      {/* <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button> */}
+                      <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button>
                     </div>
                   </div>
                 );
@@ -464,17 +468,6 @@ export default function Dashboard({ setView }) {
                </button>
              </>
           )}
-
-          {/* RESULTS VIEW JUST SHOWS DELETE */}
-          {/* {viewMode === 'results' && (
-             <button 
-               className="btn-reset" 
-               style={{ border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', width: '100%' }} 
-               onClick={() => activeAnalysisId && handleDelete(activeAnalysisId)}
-             >
-               Delete Record
-             </button>
-          )} */}
         </div>
       )}
     </>
