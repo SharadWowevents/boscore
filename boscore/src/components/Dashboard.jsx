@@ -444,7 +444,7 @@ export default function Dashboard({ setView }) {
                     </div>
                     <div className="history-actions">
                       <button className="btn-action" onClick={() => loadAnalysis(record)}>View</button>
-                      <button className="btn-action del" onClick={() => handleDelete(record._id)}>Delete</button>
+                      
                     </div>
                   </div>
                 );
