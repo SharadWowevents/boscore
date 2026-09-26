@@ -200,7 +200,7 @@ function Auth({ type, setView }) {
                     href="https://wowos.in/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[var(--gold)] hover:underline hover:text-[var(--gold2)] transition-colors"
+                    className="text-[#C9890B] hover:underline hover:text-[#E9A820] transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Privacy Policy
