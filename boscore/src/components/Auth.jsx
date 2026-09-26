@@ -190,7 +190,7 @@ function Auth({ type, setView }) {
                     href="https://wowos.in/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[var(--gold)] hover:underline hover:text-[var(--gold2)] transition-colors"
+                    className="text-[#C9890B] hover:underline hover:text-[#E9A820] transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Terms of Service
@@ -201,7 +201,6 @@ function Auth({ type, setView }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#C9890B] hover:underline hover:text-[#E9A820] transition-colors"
-                    style={{color: 'var(--text-soft)'}}
                     onClick={(e) => e.stopPropagation()}
                   >
                     Privacy Policy
