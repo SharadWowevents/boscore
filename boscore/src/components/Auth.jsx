@@ -23,12 +23,12 @@ function Auth({ type, setView }) {
     const payload = type === 'login'
       ? { email, password }
       : {
-          name,
-          email,
-          password,
-          mobile,
-          communicationsConsent,
-        };
+        name,
+        email,
+        password,
+        mobile,
+        communicationsConsent,
+      };
 
     try {
       const response = await fetch(`${endpoint}`, {
@@ -185,8 +185,26 @@ function Auth({ type, setView }) {
                 />
 
                 <span>
-                  I agree to receive communications regarding this resource
-                  and occasional updates.
+                  I agree to the{' '}
+                  <a
+                    href="https://wowos.in/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--gold)] hover:underline hover:text-[var(--gold2)] transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms of Service
+                  </a>
+                  {' '}and{' '}
+                  <a
+                    href="https://wowos.in/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--gold)] hover:underline hover:text-[var(--gold2)] transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </a>.
                 </span>
               </label>
             )}
