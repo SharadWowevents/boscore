@@ -1,34 +1,43 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-function Auth({ type, setView }) {
+function Auth({ type, resetToken, setView }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [communicationsConsent, setCommunicationsConsent] = useState(false);
 
-  // New state for handling loading and errors
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
-    const endpoint = type === 'login'
-      ? '/api/auth/login'
-      : '/api/auth/signup';
+    if (type === 'reset' && password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
-    const payload = type === 'login'
-      ? { email, password }
-      : {
-        name,
-        email,
-        password,
-        mobile,
-        communicationsConsent,
-      };
+    const endpoint = {
+      login: '/api/auth/login',
+      signup: '/api/auth/signup',
+      forgot: '/api/auth/forgot-password',
+      reset: '/api/auth/reset-password',
+    }[type];
+
+    const payload = type === 'signup'
+      ? { name, email, password, mobile, communicationsConsent }
+      : type === 'forgot'
+        ? { email }
+        : type === 'reset'
+          ? { token: resetToken, password }
+          : { email, password };
 
     try {
       const response = await fetch(`${endpoint}`, {
@@ -45,6 +54,16 @@ function Auth({ type, setView }) {
         throw new Error(data.msg || 'Authentication failed');
       }
 
+      if (type === 'forgot') {
+        setSuccess(data.msg);
+        return;
+      }
+
+      if (type === 'reset') {
+        setSuccess(data.msg);
+        return;
+      }
+
       // Save the JWT token to localStorage
       localStorage.setItem('token', data.token);
 
@@ -52,17 +71,24 @@ function Auth({ type, setView }) {
       setView('dashboard');
 
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Request failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to switch views and clear errors
   const handleSwitchView = (newView) => {
     setError('');
+    setSuccess('');
     setView(newView);
   };
+
+  const title = {
+    login: 'Welcome Back',
+    signup: 'Create an Account',
+    forgot: 'Forgot Password',
+    reset: 'Set a New Password',
+  }[type];
 
   return (
     <div className="auth-container">
@@ -92,27 +118,26 @@ function Auth({ type, setView }) {
           </div>
 
           <h2 className="auth-title">
-            {type === 'login' ? 'Welcome Back' : 'Create an Account'}
+            {title}
           </h2>
 
-          {/* Error Message */}
-          {error && (
+          {(error || success) && (
             <div
               style={{
-                color: '#EF4444',
+                color: error ? '#EF4444' : '#22C55E',
                 fontSize: '13px',
                 textAlign: 'center',
                 marginBottom: '15px',
-                background: 'rgba(239, 68, 68, 0.1)',
+                background: error ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                 padding: '8px',
                 borderRadius: '6px'
               }}
             >
-              {error}
+              {error || success}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          {!success && <form onSubmit={handleSubmit}>
 
             {type === 'signup' && (
               <>
@@ -136,23 +161,40 @@ function Auth({ type, setView }) {
               </>
             )}
 
-            <input
-              type="email"
-              placeholder="Email Address"
-              className="auth-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            {(type === 'login' || type === 'signup' || type === 'forgot') && (
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="auth-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            )}
 
-            <input
-              type="password"
-              placeholder="Password"
-              className="auth-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            {(type === 'login' || type === 'signup' || type === 'reset') && (
+              <input
+                type="password"
+                placeholder={type === 'reset' ? 'New Password (at least 8 characters)' : 'Password'}
+                className="auth-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={type === 'reset' ? 8 : undefined}
+                required
+              />
+            )}
+
+            {type === 'reset' && (
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                className="auth-input"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+                required
+              />
+            )}
 
             {/* Communication Consent Checkbox */}
             {type === 'signup' && (
@@ -220,16 +262,32 @@ function Auth({ type, setView }) {
             >
               {loading
                 ? 'Processing...'
-                : type === 'login'
-                  ? 'Log In'
-                  : 'Sign Up'}
+                : ({
+                  login: 'Log In',
+                  signup: 'Sign Up',
+                  forgot: 'Send Reset Link',
+                  reset: 'Reset Password',
+                }[type])}
             </button>
-          </form>
+          </form>}
 
           <div className="auth-switch">
-            {type === 'login' ? (
-              <p onClick={() => handleSwitchView('signup')}>
-                Don't have an account? <span>Sign Up</span>
+            {success && (type === 'forgot' || type === 'reset') ? (
+              <p onClick={() => handleSwitchView('login')}>
+                Back to <span>Log In</span>
+              </p>
+            ) : type === 'login' ? (
+              <>
+                <p onClick={() => handleSwitchView('forgot')}>
+                  Forgot your password? <span>Reset it</span>
+                </p>
+                <p onClick={() => handleSwitchView('signup')}>
+                  Don't have an account? <span>Sign Up</span>
+                </p>
+              </>
+            ) : type === 'forgot' || type === 'reset' ? (
+              <p onClick={() => handleSwitchView('login')}>
+                Back to <span>Log In</span>
               </p>
             ) : (
               <p onClick={() => handleSwitchView('login')}>

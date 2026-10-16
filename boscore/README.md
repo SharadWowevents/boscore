@@ -1,4 +1,18 @@
-# React + Vite
+# WOWOS FAST TRACK
+
+## Password recovery
+
+The backend sends password reset links through SMTP. Configure these environment
+variables in `backend/.env`:
+
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` for the SMTP server
+- `SMTP_SECURE=true` to force TLS (port 465 enables it automatically)
+- `MAIL_FROM` for the sender address
+- `FRONTEND_URL` for the deployed frontend origin, such as `https://example.com`
+
+Reset tokens are single-use, stored hashed, and expire after five minutes.
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
