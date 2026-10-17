@@ -10,7 +10,7 @@ const PASSWORD_RESET_TTL_MS = 5 * 60 * 1000;
 
 const getMailTransport = () => {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !process.env.MAIL_FROM) {
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !process.env.ADMIN_EMAIL) {
     throw new Error('Password reset email is not configured');
   }
   const port = Number(SMTP_PORT);
@@ -99,7 +99,7 @@ router.post('/forgot-password', async (req, res) => {
 
     try {
       await mailTransport.sendMail({
-        from: process.env.MAIL_FROM,
+        from: process.env.ADMIN_EMAIL,
         to: user.email,
         subject: 'Reset your WOWOS FAST TRACK password',
         text: `Use this link to reset your password. It expires in 5 minutes:\n\n${resetUrl.toString()}`,
