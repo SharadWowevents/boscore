@@ -3,28 +3,10 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const { sendEmail } = require('../services/emailService');
 
 const PASSWORD_RESET_TTL_MS = 5 * 60 * 1000;
-
-const getMailTransport = () => {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !process.env.ADMIN_EMAIL) {
-    throw new Error('Password reset email is not configured');
-  }
-  const port = Number(SMTP_PORT);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('SMTP port is invalid');
-  }
-
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port,
-    secure: process.env.SMTP_SECURE === 'true' || port === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-};
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
@@ -76,7 +58,10 @@ router.post('/forgot-password', async (req, res) => {
   }
 
   try {
-    const mailTransport = getMailTransport();
+    const fromEmail = process.env.ZOHO_FROM_EMAIL || process.env.MAIL_FROM || process.env.ADMIN_EMAIL;
+    if (!process.env.ZOHO_API_KEY || !fromEmail) {
+      throw new Error('Password reset email is not configured (missing ZOHO_API_KEY or ZOHO_FROM_EMAIL/ADMIN_EMAIL)');
+    }
     const frontendUrl = process.env.FRONTEND_URL;
     if (!frontendUrl) throw new Error('Frontend URL is not configured');
     const resetUrl = new URL('/', frontendUrl);
@@ -98,12 +83,11 @@ router.post('/forgot-password', async (req, res) => {
     resetUrl.searchParams.set('resetToken', resetToken);
 
     try {
-      await mailTransport.sendMail({
-        from: process.env.ADMIN_EMAIL,
+      await sendEmail({
         to: user.email,
+        toName: user.name,
         subject: 'Reset your WOWOS FAST TRACK password',
-        text: `Use this link to reset your password. It expires in 5 minutes:\n\n${resetUrl.toString()}`,
-        html: `<p>Use the link below to reset your password. It expires in 5 minutes.</p><p><a href="${resetUrl.toString()}">Reset password</a></p>`,
+        htmlbody: `<div><p>Hello ${user.name || 'User'},</p><p>Use the link below to reset your password. It expires in 5 minutes.</p><p><a href="${resetUrl.toString()}">Reset password</a></p></div>`,
       });
     } catch (err) {
       await User.updateOne(
