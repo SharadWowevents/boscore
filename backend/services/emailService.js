@@ -198,7 +198,18 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
     dateStyle: 'full',
     timeStyle: 'short',
   });
-  const frontendUrl = process.env.FRONTEND_URL || 'https://boscore.wowosapps.com';
+  const rawFrontendUrl = (process.env.FRONTEND_URL || 'https://boscore.wowosapps.com').trim();
+  let loginUrl = rawFrontendUrl;
+  try {
+    const urlObj = new URL(rawFrontendUrl);
+    urlObj.searchParams.set('mode', 'login');
+    if (userEmail) {
+      urlObj.searchParams.set('email', userEmail);
+    }
+    loginUrl = urlObj.toString();
+  } catch {
+    loginUrl = `${rawFrontendUrl.replace(/\/+$/, '')}/?mode=login${userEmail ? `&email=${encodeURIComponent(userEmail)}` : ''}`;
+  }
 
   // Build HTML for Priority Focus Areas
   let priorityHtml = '';
@@ -418,7 +429,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
               <!-- Call to Action -->
               <tr>
                 <td style="padding:10px 30px 30px;text-align:center;">
-                  <a href="${frontendUrl}" target="_blank" style="display:inline-block;background:#c9890b;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(201,137,11,0.3);">
+                  <a href="${loginUrl}" target="_blank" style="display:inline-block;background:#c9890b;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(201,137,11,0.3);">
                     Open Full Assessment on Dashboard →
                   </a>
                   <div style="font-size:11px;color:#94a3b8;margin-top:10px;">

@@ -1,7 +1,13 @@
 import { useState } from 'react';
 
 function Auth({ type, resetToken, setView }) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('email') || '';
+    } catch {
+      return '';
+    }
+  });
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
