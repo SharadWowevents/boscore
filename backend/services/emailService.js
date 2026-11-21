@@ -306,7 +306,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
     <body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;">
       
       <!-- Outer Container -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;padding:30px 10px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFF;padding:30px 10px;">
         <tr>
           <td align="center">
             
@@ -320,7 +320,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
                     Hello ${userName},
                   </h2>
                   <p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#475569;">
-                    Here is your Business Owner Score for <strong>${analysisName || 'Assessment'}</strong>, generated on ${dateFormatted}.
+                    Here is your Business Owner Score for <strong>${analysisName || 'Assessment'}</strong>.
                   </p>
                 </td>
               </tr>
