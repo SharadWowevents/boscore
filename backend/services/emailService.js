@@ -303,7 +303,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Business Owner Score (BO Score) Report</title>
     </head>
-    <body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;">
+    <body style="margin:0;padding:0;background:#fffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;">
       
       <!-- Outer Container -->
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFF;padding:30px 10px;">
@@ -320,7 +320,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
                     Hello ${userName},
                   </h2>
                   <p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#475569;">
-                    Here is your Business Owner Score for <strong>${analysisName || 'Assessment'}</strong>.
+                    Here is your Business Owner Score <strong>${analysisName || 'Assessment'}</strong>.
                   </p>
                 </td>
               </tr>
