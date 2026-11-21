@@ -17,4 +17,4 @@ const AnalysisSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Analysis', AnalysisSchema);
+module.exports = mongoose.models.Analysis || mongoose.model('Analysis', AnalysisSchema);
