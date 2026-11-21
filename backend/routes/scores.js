@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Score = require('../models/Score');
+const User = require('../models/User');
+const { sendScoreReportEmail } = require('../services/emailService');
 
 // GET /api/scores - Get user's scores
 router.get('/', auth, async (req, res) => {
@@ -16,7 +18,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// POST /api/scores - Save or update user's scores
+// POST /api/scores - Save or update user's scores and send email report
 router.post('/', auth, async (req, res) => {
   const { scores } = req.body; // Expects the full scores object from React state
   
@@ -27,7 +29,26 @@ router.post('/', auth, async (req, res) => {
       { $set: { scores: scores } },
       { new: true, upsert: true }
     );
-    res.json(userScore.scores);
+
+    // Send score report to user's registered email
+    let emailStatus = { success: false };
+    try {
+      const user = await User.findById(req.user.id);
+      if (user && user.email) {
+        emailStatus = await sendScoreReportEmail({
+          user,
+          scores,
+          analysisName: 'Score Update',
+        });
+      }
+    } catch (mailErr) {
+      console.error('[Scores Route] Email sending error:', mailErr.message);
+    }
+
+    res.json({
+      scores: userScore.scores,
+      emailSent: emailStatus.success || false,
+    });
   } catch (err) {
     res.status(500).send('Server Error');
   }

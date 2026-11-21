@@ -14,6 +14,7 @@ export default function Dashboard({ setView }) {
   const [isLoading, setIsLoading] = useState(true);
   const [openPillars, setOpenPillars] = useState(defaultOpenPillars);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [emailStatus, setEmailStatus] = useState({ sending: false, message: '', type: '' });
   const [viewMode, setViewMode] = useState('home');
 
   const fetchHistory = async () => {
@@ -48,7 +49,8 @@ export default function Dashboard({ setView }) {
   }, []);
 
   const handleShowScoreAndSave = async () => {
-    setSaveStatus('Saving...');
+    setSaveStatus('Saving & Sending Report...');
+    setEmailStatus({ sending: false, message: '', type: '' });
     const token = localStorage.getItem('token');
     const isNewRecord = !activeAnalysisId; 
 
@@ -58,7 +60,7 @@ export default function Dashboard({ setView }) {
         response = await fetch(`/api/analysis/${activeAnalysisId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ scores })
+          body: JSON.stringify({ scores, sendEmail: true })
         });
       } else {
         const currentDateTime = new Date().toLocaleString('en-IN', { 
@@ -81,12 +83,70 @@ export default function Dashboard({ setView }) {
         setSaveStatus(null);
         setViewMode('results'); 
 
+        if (savedData.emailSent) {
+          setEmailStatus({
+            sending: false,
+            message: '📧 Full score report has been sent to your registered email!',
+            type: 'success'
+          });
+        } else if (savedData.emailMessage) {
+          setEmailStatus({
+            sending: false,
+            message: savedData.emailMessage,
+            type: 'info'
+          });
+        }
+
         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
       } else {
         setSaveStatus('Error Saving');
       }
     } catch (error) {
       setSaveStatus('Error Saving');
+    }
+  };
+
+  const handleSendEmail = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setEmailStatus({ sending: true, message: 'Sending score report to your email...', type: 'info' });
+
+    try {
+      let response;
+      if (activeAnalysisId) {
+        response = await fetch(`/api/analysis/${activeAnalysisId}/send-email`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        response = await fetch('/api/analysis/send-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ scores })
+        });
+      }
+
+      const data = await response.json();
+      if (response.ok && data.success !== false) {
+        setEmailStatus({
+          sending: false,
+          message: `✓ Score report sent to ${data.email || 'your registered email'}!`,
+          type: 'success'
+        });
+      } else {
+        setEmailStatus({
+          sending: false,
+          message: data.msg || data.error || 'Failed to send score report email',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      setEmailStatus({
+        sending: false,
+        message: 'Network error sending report email',
+        type: 'error'
+      });
     }
   };
 
@@ -111,6 +171,7 @@ export default function Dashboard({ setView }) {
   const loadAnalysis = (record) => {
     setScores(record.scores || {});
     setActiveAnalysisId(record._id);
+    setEmailStatus({ sending: false, message: '', type: '' });
     setViewMode('results'); 
 
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
@@ -119,6 +180,7 @@ export default function Dashboard({ setView }) {
   const startNewAnalysis = () => {
     setScores({});
     setActiveAnalysisId(null);
+    setEmailStatus({ sending: false, message: '', type: '' });
     setViewMode('input');
     setOpenPillars(defaultOpenPillars); 
   };
@@ -267,6 +329,63 @@ export default function Dashboard({ setView }) {
           </div>
           <div className="dial-rating" style={{ color: r.color }}>{r.label}</div>
           <div className="dial-desc">{r.desc}</div>
+
+          {/* Email Report Action & Notification */}
+          <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={handleSendEmail}
+              disabled={emailStatus.sending}
+              style={{
+                background: 'rgba(201, 137, 11, 0.18)',
+                border: '1px solid var(--gold)',
+                color: '#FFFFFF',
+                padding: '8px 20px',
+                borderRadius: '8px',
+                cursor: emailStatus.sending ? 'default' : 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+              }}
+            >
+              {emailStatus.sending ? '⏳ Sending Report...' : '✉️ Send Report to Email'}
+            </button>
+
+            {emailStatus.message && (
+              <div
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  background:
+                    emailStatus.type === 'success'
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : emailStatus.type === 'error'
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : 'rgba(59, 130, 246, 0.15)',
+                  color:
+                    emailStatus.type === 'success'
+                      ? '#4ADE80'
+                      : emailStatus.type === 'error'
+                      ? '#F87171'
+                      : '#60A5FA',
+                  border: `1px solid ${
+                    emailStatus.type === 'success'
+                      ? 'rgba(34, 197, 94, 0.3)'
+                      : emailStatus.type === 'error'
+                      ? 'rgba(239, 68, 68, 0.3)'
+                      : 'rgba(59, 130, 246, 0.3)'
+                  }`,
+                }}
+              >
+                {emailStatus.message}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -309,7 +428,6 @@ export default function Dashboard({ setView }) {
                                <div className="kpi-sub">{kpi.s}</div>
                              </div>
                              
-                             {/* THE FIX: Button container flex expands, and buttons fill the space evenly */}
                              <div style={{ display: 'flex', gap: '10px', flex: '1 1 280px' }}>
                                {[1, 2, 3, 4, 5].map(n => (
                                  <button 
@@ -317,8 +435,8 @@ export default function Dashboard({ setView }) {
                                    className={`score-btn ${val === n ? 'sel' : ''}`} 
                                    style={{
                                      ...(val === n ? { background: SCORE_COLORS[n], borderColor: SCORE_COLORS[n], color: '#fff' } : {}),
-                                     flex: 1, /* Makes buttons evenly stretch to fill gap */
-                                     padding: '12px 0', /* Better touch target for mobile */
+                                     flex: 1,
+                                     padding: '12px 0',
                                      textAlign: 'center'
                                    }} 
                                    onClick={() => setScore(p.id, idx, n)}
@@ -406,9 +524,9 @@ export default function Dashboard({ setView }) {
               {[
                 { r: '750 – 850', l: 'Excellent', d: 'Business running like a system. Building a legacy.', c: '#22C55E' },
                 { r: '600 – 749', l: 'Strong', d: 'Solid foundations. Clear gaps to close.', c: '#3B82F6' },
-                { r: '450 – 599', l: 'Average', d: 'Works but fragile. One crisis exposes the gaps.', c: '#F97316' },
+                { r: '450 – 599', l: 'Average', d: 'Works but fragile. Fix gaps.', c: '#F97316' },
                 { r: '300 – 449', l: 'Needs Work', d: 'Risk in at least 2 pillars. Fix before scaling.', c: '#EF4444' },
-                { r: '0 – 299', l: 'Critical', d: 'Stop growing. Stabilise the business first.', c: '#9B1C1C' },
+                { r: '0 – 299', l: 'Critical', d: 'Stop growing. Stabilise first.', c: '#9B1C1C' },
               ].map((g, i) => (
                 <div className="guide-row" key={i}>
                   <div className="guide-dot" style={{ background: g.c }}></div>
@@ -444,7 +562,6 @@ export default function Dashboard({ setView }) {
                     </div>
                     <div className="history-actions">
                       <button className="btn-action" onClick={() => loadAnalysis(record)}>View</button>
-                      
                     </div>
                   </div>
                 );
