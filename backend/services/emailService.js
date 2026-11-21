@@ -312,17 +312,6 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
             
             <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.35);">
               
-              <!-- Brand Header -->
-              <tr>
-                <td style="background:#0d1117;padding:26px 30px;border-bottom:2px solid #c9890b;text-align:center;">
-                  <div style="font-size:22px;font-weight:800;color:#e9a820;letter-spacing:1px;text-transform:uppercase;">
-                    WOWOS FAST TRACK
-                  </div>
-                  <div style="font-size:13px;color:#8a9bb0;margin-top:4px;letter-spacing:0.5px;">
-                    Business Owner Score (BO Score) Executive Report
-                  </div>
-                </td>
-              </tr>
 
               <!-- Greeting & Subheading -->
               <tr>
@@ -331,10 +320,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
                     Hello ${userName},
                   </h2>
                   <p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#475569;">
-                    Here is your official Business Owner Score report for <strong>${analysisName || 'Assessment'}</strong>, generated on ${dateFormatted}.
-                  </p>
-                  <p style="margin:0;font-size:13px;color:#64748b;">
-                    Registered Account: <strong>${userEmail}</strong>
+                    Here is your Business Owner Score for <strong>${analysisName || 'Assessment'}</strong>, generated on ${dateFormatted}.
                   </p>
                 </td>
               </tr>
@@ -445,11 +431,7 @@ const generateScoreReportHtml = ({ user, scores, analysisName }) => {
               <tr>
                 <td style="background:#f1f5f9;border-top:1px solid #e2e8f0;padding:20px 30px;text-align:center;">
                   <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#475569;">
-                    WOWOS FAST TRACK • Business Owner Score
-                  </p>
-                  <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.4;">
-                    This is an automated confidential performance audit report sent to ${userEmail}.<br>
-                    Delivered via Zoho CPaaS API.
+                    WOWOS • Business Owner Score
                   </p>
                 </td>
               </tr>
